@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Assignment for Shiny App</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Assignment for Shiny App">
+  <meta name="author" content="">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Assignment for Shiny App</h1>
+    <h2>Using Boston data as an example</h2>
+    <p><br/></p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>Correlation for Housing Price in Shiny App</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol>
+<li>The shiny app will produce a scatter plot between variables (selected from panel bar) and our house price outcome, a linear correlation estimator will be presented, and with an option for plotting a smooth curve.</li>
+<li>Boston Data will be called in.  There were 506 samples, with 14 variables in Boston Dataset.</li>
+<li>House price (variable: medv) is our interested outcome: medv – Median value of owner-occupied homes in $1000’s</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Variables in the Boston Data</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol>
+<li>crim  – per capita crime rate by town</li>
+<li>zn    – proportion of residential land zoned for lots over 25,000 sq.ft</li>
+<li>indus – proportion of non-retail business acres per town</li>
+<li>chas  – Charles River dummy variable (1 if tract bounds river; else 0)</li>
+<li>nox   – nitric oxides concentration (parts per 10 million)</li>
+<li>rm    – average number of rooms per dwelling</li>
+<li>age   – proportion of owner-occupied units built prior to 1940</li>
+<li>dis   – weighted distances to five Boston employment centres</li>
+<li>rad   – index of accessibility to radial highways</li>
+<li>tax  – full-value property-tax rate per $10,000</li>
+<li>ptratio    – pupil-teacher ratio by town</li>
+<li>black      – 1000(Bk - 0.63)<sup>2</sup> where Bk is the proportion of blacks by town</li>
+<li>lstat      – % lower status of the population</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Part of my server.R file</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">shinyServer(function(input, output) {
+  output$distPlot &lt;- renderPlot({
+    # generate bins based on input$bins from ui.R
+    x &lt;- Boston[,input$xcol], y &lt;- Boston$medv ### see median value of the homes
+    par(mar=c(4,4,1,1))
+    plot(x, y, pch = 19, col = &#39;black&#39;,
+         xlab = input$xcol,
+         ylab = &quot;medv&quot;)
+    text(quantile(x, probs = 0.8, na.rm=T), quantile(y, probs = 0.95, na.rm=T),
+         paste(&quot;Corr = &quot;, round(cor(x,y),2), sep=&quot;&quot;), font = 4, col = &quot;firebrick&quot;, cex=1.4, pos = 4)
+    # Display only if smoother is checked. the line code mimic from R studio example
+    if(input$smoother){
+            smooth_curve &lt;- lowess(x = x, y = y, f = input$f)
+            lines(smooth_curve, col = &quot;#E6553A&quot;, lwd = 3)
+    } ### end if smoother })  })
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Part of my ui.R file</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">shinyUI(fluidPage(
+  titlePanel(&quot;Boston Housing Data correlations&quot;), # Application title
+  sidebarLayout(
+    sidebarPanel(
+       selectInput(&#39;xcol&#39;, &#39;X Variable&#39;, choices=colnames(Boston)),
+       # Select whether to overlay smooth trend line
+       checkboxInput(inputId = &quot;smoother&quot;, label = strong(&quot;Overlay smooth trend line&quot;), value = FALSE),
+       # Display only if the smoother is checked. 
+       conditionalPanel(condition = &quot;input.smoother == true&quot;,
+                        sliderInput(inputId = &quot;f&quot;, label = &quot;Smoother span:&quot;,
+                                    min = 0.01, max = 1, value = 0.67, step = 0.01,
+                                    animate = animationOptions(interval = 100)),
+                        HTML(&quot;Higher values give more smoothness.&quot;))
+    ),
+    # Show a plot of the generated distribution
+    mainPanel(
+       plotOutput(&quot;distPlot&quot;) ) ) ))
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Correlation for Housing Price in Shiny App'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Variables in the Boston Data'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Part of my server.R file'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Part of my ui.R file'>
+         4
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
